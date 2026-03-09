@@ -1,0 +1,54 @@
+# MATLAB auto-saved files
+*.asv
+*.asvx
+
+# MATLAB temporary files
+*.mat
+*.mex*
+*.mexw32
+*.mexw64
+*.mexmaci64
+*.mexa64
+*.mexmac
+
+# MATLAB Simulink files
+*.slx.autosave
+*.slx.backup
+
+# MATLAB compiled files
+*.pre
+*.scc
+~$*
+
+# MATLAB workspace
+workspace.mat
+*.prj
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor and IDE files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+
+# Compiled files
+*.o
+*.so
+*.dll
+*.exe
