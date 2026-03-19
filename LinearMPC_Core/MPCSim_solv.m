@@ -1,4 +1,4 @@
-function [u,u_series]=MPCSim_solv(MPCSim_prob,err,xr,ur)
+function [u,u_series]=MPCSim_solv(MPCSim_prob,err,xr,ur,terminal_term)
 % MPCSim_solv - Solve MPC optimization problem to compute optimal control sequence
 %
 % Inputs:
@@ -11,6 +11,7 @@ function [u,u_series]=MPCSim_solv(MPCSim_prob,err,xr,ur)
 %   err         - Current state error (n x 1), defined as x_ref - x_current
 %   xr          - Reference state trajectory in future horizon (n x N)
 %   ur          - Reference input trajectory in future horizon (p x N)
+%   terminal_term - Terminal cost terms
 %
 % Outputs:
 %   u           - First optimal control action (p x 1)
@@ -25,16 +26,25 @@ Sx = MPCSim_prob.Sx;
 Su = MPCSim_prob.Su;
 Q = MPCSim_prob.Q;
 R = MPCSim_prob.R;
-
+%% Reading Terminal Terms
+n = size(MPCSim_prob.Ad,1);
+Sn = Su(end-n+1:end,:);
+if isempty(terminal_term)
+    P = zeros(n);
+    AN = zeros(n);
+else
+    P = terminal_term.P;
+    AN = MPCSim_prob.Ad^MPCSim_prob.Horizen;
+end
 %% QP Construction
 % Hessian Matrices:
-H = Su'*Q*Su+R;
+H = Su'*Q*Su+Sn'*P*Sn+R;
 H = (H'+H)/2;   % Symmetrization to avoid floating-point errors
 % Coefficient Vector:
-F = err'*Sx'*Q*Su;
+F = err'*(Sx'*Q*Su+AN'*P*Sn);
 
 %% Create Constraints
-[A,Ub]=MPCSim_cnst(MPCSim_prob,err,xr,ur);
+[A,Ub]=MPCSim_cnst(MPCSim_prob,err,xr,ur,terminal_term);
 
 %% Solve QP
 % using quadprog:
@@ -53,10 +63,10 @@ u_series = sol.x;
 
 %% Return the Solution
 p = size(MPCSim_prob.Bc,2);
-try
-    u = u_series(1:p);
-catch
+if any(isnan(u_series(1:p)))
+    u = zeros(p,1);
     warning("The optimization problem has no solution!")
-    u =[];
+else
+    u = u_series(1:p);
 end
 end

@@ -53,10 +53,10 @@ u_series = sol.x;
 
 %% Return the Solution
 p = size(MPCSim_prob.Bc,2);
-try
-    u = u_series(1:p);
-catch
+if any(isnan(u_series(1:p)))
+    u = zeros(p,1);
     warning("The optimization problem has no solution!")
-    u =[];
+else
+    u = u_series(1:p);
 end
 end

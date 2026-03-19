@@ -1,4 +1,4 @@
-function [A,Ub]=MPCSim_cnst(MPCSim_prob,err,xr_part,ur_part)
+function [A,Ub]=MPCSim_cnst(MPCSim_prob,err,xr_part,ur_part,terminal_term)
 % MPCSim_cnst - Construct constraint matrices for MPC optimization problem
 %
 % Inputs:
@@ -12,6 +12,7 @@ function [A,Ub]=MPCSim_cnst(MPCSim_prob,err,xr_part,ur_part)
 %   err         - Current state error (n x 1)
 %   xr_part     - Reference state trajectory in future horizon (n x N)
 %   ur_part     - Reference input trajectory in future horizon (p x N)
+%   terminal_term - Terminal cost terms
 %
 % Outputs:
 %   A   - Constraint matrix for QP problem (2*N*p + 2*N*n x N*p)
@@ -30,6 +31,14 @@ x_min = MPCSim_prob.x_lb;
 u_max = MPCSim_prob.u_ub;
 u_min = MPCSim_prob.u_lb;
 
+%% Reading Terminal Terms
+if ~isempty(terminal_term)
+    AN = MPCSim_prob.Ad^MPCSim_prob.Horizen;
+    beta = terminal_term.beta;
+    V = terminal_term.V;
+    n = size(MPCSim_prob.Ad,1);
+    Sn = Su(end-n+1:end,:);
+end
 %% Conversion
 % convert to error-representation:
 xe_max = xr_part-x_min;
@@ -47,7 +56,17 @@ Ue_min = ue_min(:);
 Ux_max = Xe_max-Sx*err;
 Ux_min = Xe_min-Sx*err;
 
+% terminal set constraints:
+if ~isempty(terminal_term)
+    Ut_max = - V*AN*err + beta;
+    Ut_min = - V*AN*err - beta;
+end
 %% Return Standard QP Matrices
 I = eye(size(Su,2));
-A = [I;-I;Su;-Su];
-Ub = [Ue_max;-Ue_min;Ux_max;-Ux_min];
+if ~isempty(terminal_term)
+    A = [I;-I;Su;-Su;V*Sn;-V*Sn];
+    Ub = [Ue_max;-Ue_min;Ux_max;-Ux_min;Ut_max;-Ut_min];
+else
+    A = [I;-I;Su;-Su];
+    Ub = [Ue_max;-Ue_min;Ux_max;-Ux_min];
+end

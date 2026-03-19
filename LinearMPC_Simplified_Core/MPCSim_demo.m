@@ -9,9 +9,9 @@ B = [0 ; 2];
 xr_fun = @(t) [5+sin(t);...
                0+cos(t)];
 ur_fun = @(x,t) (2*x(1,:) + 3*x(2,:)- sin(t))/2;
-x_ini = [0;0];
+x_ini = [10;10];
 %% 初始化
-prob = MPCSim_init(A,B,diag([100,1]),0.1,20,0.1,[10;10],-[10;10],10,0);
+prob = MPCSim_init(A,B,diag([100,1]),0.1,20,0.05,[10;10],-[10;10],10,0);
 N = prob.Horizen;
 Ts = prob.Ts;
 tspan = 0:dt:T;
